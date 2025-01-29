@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://dgoa6hnwh6lwk"]
+
+[ext_resource type="Script" path="res://RichTextLabel.gd" id="1_beund"]
+[ext_resource type="Script" path="res://main.gd" id="1_ilwfi"]
+[ext_resource type="Texture2D" uid="uid://x7okv3y2vbjw" path="res://Untitled2.png" id="2_jpp34"]
+[ext_resource type="Script" path="res://Untitled2.gd" id="3_leskt"]
+
+[node name="Backdrop" type="Node2D"]
+script = ExtResource("1_ilwfi")
+
+[node name="signal pos" type="RichTextLabel" parent="."]
+offset_left = 216.0
+offset_top = 263.0
+offset_right = 256.0
+offset_bottom = 303.0
+text = "test"
+script = ExtResource("1_beund")
+
+[node name="Untitled2" type="Sprite2D" parent="signal pos"]
+position = Vector2(-23, 119)
+texture = ExtResource("2_jpp34")
+script = ExtResource("3_leskt")
+
+[connection signal="posst" from="." to="signal pos/Untitled2" method="_on_backdrop_posst"]

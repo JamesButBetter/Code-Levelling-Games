@@ -1,0 +1,230 @@
+[gd_scene load_steps=7 format=3 uid="uid://tmncwa8ekv5l"]
+
+[ext_resource type="TileSet" uid="uid://dxtnssuqawohx" path="res://backdrops.tres" id="1_o1dhr"]
+[ext_resource type="Script" path="res://game.gd" id="2_him4c"]
+[ext_resource type="Texture2D" uid="uid://bcv8a001ke3v8" path="res://upBlockTest.png" id="3_adufm"]
+[ext_resource type="Script" path="res://upBlock.gd" id="3_oi8mv"]
+[ext_resource type="Script" path="res://codePanel.gd" id="4_6or88"]
+
+[sub_resource type="GDScript" id="GDScript_6h84l"]
+script/source = "extends Node2D
+# Assuming you have a TileMap node in your scene
+@onready var tilemap: TileMap = $TileMap
+
+var startPosition = Vector2i(13, 7)
+var replacedTile = 5
+var pos = Vector2i(13, 7)
+
+var tile_values: Dictionary = {}
+
+var addedTiles = 6
+
+func change_tile(cell_position: Vector2i, new_tile_id: int, new_tile_atlas_coords: Vector2i = Vector2i(0, 0)) -> void:
+	# Set the tile at the specified cell position
+	tilemap.set_cell(0, cell_position, new_tile_id, new_tile_atlas_coords)
+
+func get_tile_id_at(cell_position: Vector2i) -> int:
+	# Get the source ID of the tile at the specified cell position
+	var source_id: int = tilemap.get_cell_source_id(0, cell_position)
+	
+	# If there's a tile at the position, return its source ID; otherwise, return -1
+	return source_id
+
+func get_tile_coordinates(cell: Vector2i) -> Dictionary:
+	# Get the tile's top-left corner in the TileMap's local space
+	var tile_top_left = tilemap.map_to_local(cell)
+
+	# Get the tile's size
+	var tile_size = Vector2(tilemap.tile_set.tile_size)
+
+	# Calculate the tile's bottom-right corner
+	var tile_bottom_right = tile_top_left + tile_size
+
+	# Calculate the tile's center
+	var tile_center = (tile_top_left + tile_bottom_right) / 2
+
+	# Return the coordinates as a dictionary
+	return {
+		\"top_left\": tile_top_left,
+		\"bottom_right\": tile_bottom_right,
+		\"center\": tile_center
+	}
+
+func spawn_labels_for_tile_id(tile_id: int) -> void:
+	# Get all used cells in the TileMap
+	var used_cells = tilemap.get_used_cells(0)
+
+	for cell in used_cells:
+		# Check if the tile has the specified ID
+		if get_tile_id_at(cell) == tile_id:
+			spawn_labels_at_tile(cell)
+
+func spawn_labels_at_tile(cell: Vector2i) -> void:
+	# Create a Label node
+	var label = Label.new()
+	label.text = str(5)
+
+	# Scale the label to 20%
+	label.scale = Vector2(0.4, 0.4)
+
+	# --- Calculate the tile's center ---
+	# 1. Get the tile's top-left corner in the TileMap's local space
+	var tile_local_pos = tilemap.map_to_local(cell)
+
+	# --- Adjust the label's position to center it ---
+	# 1. Get the label's scaled size
+	var label_size = label.get_minimum_size() * label.scale
+	print(label_size)
+	# 2. Offset the label so its center aligns with the tile's center
+	label.position = tile_local_pos - (label_size / 2)
+
+	# Add the Label to the scene
+	add_child(label)
+
+	# Store the value
+	tile_values[cell] = 5
+
+func destroy_label_at_tile(cell: Vector2i) -> void:
+	# Check if the tile has a stored value
+	if tile_values.has(cell):
+		# Remove the value from the dictionary
+		tile_values.erase(cell)
+
+		# Iterate through all children to find the label associated with the tile
+		for child in get_children():
+			if child is Label:
+				# Calculate the expected position of the label for the given cell
+				var tile_local_pos = tilemap.map_to_local(cell)
+				var label_size = child.get_minimum_size() * child.scale
+				var expected_position = tile_local_pos - (label_size / 2)
+
+				# If the label's position matches the expected position, remove it
+				if child.position == expected_position:
+					child.queue_free()  # Remove the label node from the scene
+					break  # Exit the loop once the label is found and removed
+
+func updatePosition(dir) -> void:
+	if dir == (\"up\"):
+		change_tile(pos, replacedTile)
+		pos.y -= 1
+		replacedTile = get_tile_id_at(pos)
+		change_tile(pos,6)
+	if dir == (\"right\"):
+		change_tile(pos, replacedTile)
+		pos.x += 1
+		replacedTile = get_tile_id_at(pos)
+		change_tile(pos,6)
+	if dir == (\"down\"):
+		change_tile(pos, replacedTile)
+		pos.y += 1
+		replacedTile = get_tile_id_at(pos)
+		change_tile(pos,6)
+	if dir == (\"left\"):
+		change_tile(pos, replacedTile)
+		pos.x -= 1
+		replacedTile = get_tile_id_at(pos)
+		change_tile(pos,6)
+
+func _input(event: InputEvent) -> void:
+	# Check if the event is a mouse button click
+	if event is InputEventMouseButton and event.pressed:
+		# Get the mouse position in the TileMap's local space
+		var mouse_position: Vector2 = tilemap.get_local_mouse_position()
+		
+		# Convert the mouse position to tile coordinates
+		var tile_coords: Vector2i = tilemap.local_to_map(mouse_position)
+		
+		
+		# Check if the tile coordinates are valid (optional)
+		if tilemap.get_cell_source_id(0, tile_coords) != -1:
+			var id = get_tile_id_at(tile_coords)
+			if id <= addedTiles - 1:
+				change_tile(tile_coords, id + 1)
+				if id + 1 == 6:
+					spawn_labels_at_tile(tile_coords)
+			else:
+				change_tile(tile_coords, 1)
+				destroy_label_at_tile(tile_coords)
+			
+			# Print the value stored at the clicked cell (if it exists)
+			if tile_values.has(tile_coords):
+				print(\"Value at cell \", tile_coords, \": \", tile_values[tile_coords])
+			else:
+				print(\"No value stored at cell \", tile_coords)
+		#else:
+			#print(\"Clicked on empty space at coordinates: \", tile_coords)
+
+# Called when the node enters the scene tree for the first time.
+func _ready():    # Change the tile at position (2, 3) to tile ID 1
+	change_tile(Vector2i(startPosition), 6)
+	change_tile(Vector2i(0, 2), 6)
+	change_tile(Vector2i(0, 0), 6)
+	spawn_labels_for_tile_id(6)
+	# Clear the tile at position (4, 5)
+	# change_tile(Vector2i(4, 5), -1)
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
+
+		
+"
+
+[node name="level" type="Node2D"]
+script = SubResource("GDScript_6h84l")
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource("1_o1dhr")
+format = 2
+layer_0/tile_data = PackedInt32Array(458766, 2, 0, 458765, 5, 0, 393229, 1, 0, 327693, 1, 0, 262157, 3, 0, 196621, 3, 0, 131085, 3, 0, 65549, 3, 0, 13, 2, 0, 12, 2, 0, 11, 2, 0, 10, 2, 0, 9, 2, 0, 8, 2, 0, 7, 2, 0, 6, 2, 0, 5, 2, 0, 4, 2, 0, 3, 2, 0, 2, 2, 0, 1, 2, 0, 0, 2, 0, 65536, 2, 0, 131072, 2, 0, 196608, 2, 0, 262144, 2, 0, 327680, 2, 0, 393216, 2, 0, 458752, 2, 0, 524288, 2, 0, 524289, 2, 0, 458753, 3, 0, 393217, 3, 0, 327681, 3, 0, 262145, 1, 0, 196609, 1, 0, 131073, 4, 0, 65537, 4, 0, 65538, 4, 0, 131074, 4, 0, 196610, 1, 0, 262146, 1, 0, 327682, 3, 0, 393218, 1, 0, 458754, 3, 0, 524290, 2, 0, 524291, 2, 0, 458755, 3, 0, 393219, 1, 0, 327683, 3, 0, 262147, 1, 0, 196611, 1, 0, 131075, 1, 0, 65539, 3, 0, 65540, 3, 0, 131076, 1, 0, 196612, 1, 0, 262148, 1, 0, 327684, 3, 0, 393220, 1, 0, 458756, 3, 0, 524292, 2, 0, 524293, 2, 0, 458757, 3, 0, 393221, 1, 0, 327685, 3, 0, 262149, 1, 0, 196613, 1, 0, 131077, 3, 0, 65541, 3, 0, 65542, 1, 0, 131078, 3, 0, 196614, 1, 0, 262150, 1, 0, 327686, 3, 0, 393222, 1, 0, 458758, 3, 0, 524294, 2, 0, 524295, 2, 0, 458759, 3, 0, 393223, 1, 0, 327687, 3, 0, 262151, 1, 0, 196615, 1, 0, 131079, 3, 0, 65543, 1, 0, 65544, 1, 0, 131080, 3, 0, 196616, 1, 0, 262152, 1, 0, 327688, 3, 0, 393224, 1, 0, 458760, 3, 0, 524296, 2, 0, 524297, 2, 0, 458761, 3, 0, 393225, 1, 0, 327689, 3, 0, 262153, 1, 0, 196617, 1, 0, 131081, 3, 0, 65545, 1, 0, 65546, 3, 0, 131082, 3, 0, 196618, 1, 0, 262154, 3, 0, 327690, 3, 0, 393226, 1, 0, 458762, 3, 0, 524298, 2, 0, 524299, 2, 0, 458763, 3, 0, 393227, 1, 0, 327691, 1, 0, 262155, 3, 0, 196619, 1, 0, 131083, 3, 0, 65547, 3, 0, 65548, 3, 0, 131084, 1, 0, 196620, 1, 0, 262156, 3, 0, 327692, 1, 0, 393228, 1, 0, 458764, 3, 0, 524300, 2, 0, 14, 2, 0, 65550, 2, 0, 131086, 2, 0, 196622, 2, 0, 262158, 2, 0, 327694, 2, 0, 524301, 2, 0, 524302, 2, 0, 393230, 2, 0)
+script = ExtResource("2_him4c")
+
+[node name="optionsPanel" type="Panel" parent="."]
+visible = false
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="upBlock" type="TextureButton" parent="optionsPanel"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 13.0
+offset_right = 112.0
+offset_bottom = 53.0
+scale = Vector2(0.193364, 0.193364)
+toggle_mode = true
+texture_normal = ExtResource("3_adufm")
+stretch_mode = 0
+script = ExtResource("3_oi8mv")
+metadata/up = ""
+
+[node name="downBlock" type="TextureButton" parent="optionsPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+metadata/down = ""
+
+[node name="leftBlock" type="TextureButton" parent="optionsPanel"]
+offset_right = 40.0
+offset_bottom = 40.0
+metadata/left = ""
+
+[node name="rightBlock" type="TextureButton" parent="optionsPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+metadata/right = ""
+
+[node name="codePanel" type="Panel" parent="."]
+visible = false
+offset_top = 44.0
+offset_right = 40.0
+offset_bottom = 84.0
+script = ExtResource("4_6or88")
+
+[node name="executionButton" type="Button" parent="."]
+visible = false
+offset_left = 35.0
+offset_top = 82.0
+offset_right = 43.0
+offset_bottom = 90.0
