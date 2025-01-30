@@ -14,20 +14,28 @@ script/source = "extends Node2D
 
 @export var currLevel = 0
 
+
+var directions = {
+	\"Movement\": [\"up\", \"right\", \"down\", \"left\"],
+	\"Rendering\": [0, 1, 2, 3],
+	\"Ai\": [0, 1, 2, 3]
+}
+
 var startPosition = Vector2i(7, 7)
 var replacedTile = 93
 var pos = Vector2i(7, 7)
+var replacedTileOrientation = 0
 
 var startDir = [1, ]
-var currDr = 1
+var currDr = 0
 
 var tile_values: Dictionary = {}
 
-var allowedBlocks = [0, 70, 71, 72]
+var allowedBlocks = [0, 70, 71, 72, 73, 74]
 #var blockedBlocks = []
 var addedTiles = 7
 var levelAllowedBlocks = [120] # Maybe make 90 jump for block or move allowed special to 90
-var specialBlocks = [70, 71, 72] # Redirect block
+var specialBlocks = [70, 71, 72, 73] # Redirect block
 
 var levelTilesPoint = 90
 
@@ -107,7 +115,7 @@ func destroy_labels_for_tile_id(tile_id: int) -> void:
 	for cell in used_cells:
 		# Check if the tile has the specified ID
 		if get_tile_id_at(cell) == tile_id:
-			destroy_label_at_tile(cell)
+			await destroy_label_at_tile(cell)
 
 func destroy_label_at_tile(cell: Vector2i) -> void:
 	# Check if the tile has a stored value
@@ -129,39 +137,53 @@ func destroy_label_at_tile(cell: Vector2i) -> void:
 					break  # Exit the loop once the label is found and removed
 
 func update_label_at_tile(cell: Vector2i, data) -> void:
-	destroy_label_at_tile(cell)
-	spawn_labels_at_tile(cell, data)
+	await destroy_label_at_tile(cell)
+	await spawn_labels_at_tile(cell, data)
+
+func checkCanMoveToBlock(replacementTest) -> bool:
+	print(replacementTest)
+	return (replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks)
 
 func updatePosition(dir) -> void:
-	if dir == (\"up\"):
-		#print(\"debug up signal\")
-			change_tile(pos, replacedTile)
-			pos.y -= 1
-			replacedTile = get_tile_id_at(pos)
-			change_tile(pos,6)
-	if dir == (\"right\"):
-		var replacementTest = get_tile_id_at(Vector2i(pos.x+1, pos.y))
-		if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-			change_tile(pos, replacedTile)
-			pos.x += 1
-			replacedTile = get_tile_id_at(pos)
-			change_tile(pos,6)
-	if dir == (\"down\"):
-		var replacementTest = get_tile_id_at(Vector2i(pos.x, pos.y+1))
-		if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-			change_tile(pos, replacedTile)
-			pos.y += 1
-			replacedTile = get_tile_id_at(pos)
-			change_tile(pos,6)
-	if dir == (\"left\"):
-		var replacementTest = get_tile_id_at(Vector2i(pos.x-1, pos.y))
-		if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-			change_tile(pos, replacedTile)
-			pos.x -= 1
-			replacedTile = get_tile_id_at(pos)
-			change_tile(pos,6)
+	match dir:
+		\"up\":
+			if checkCanMoveToBlock(get_tile_id_at(Vector2i(pos.x, pos.y-1))):
+				#print(\"debug up signal\")
+				change_tile(pos, replacedTile)
+				set_rotation_at_coords(pos, replacedTileOrientation)
+				print(\"Set totation at cords\", pos, replacedTileOrientation)
+				pos.y -= 1
+				replacedTile = get_tile_id_at(pos)
+				replacedTileOrientation = get_rotation_at_coords(pos)
+				change_tile(pos,6)
+		\"right\":
+			var replacementTest = get_tile_id_at(Vector2i(pos.x+1, pos.y))
+			if  checkCanMoveToBlock(replacementTest):
+				change_tile(pos, replacedTile)
+				set_rotation_at_coords(pos, replacedTileOrientation)
+				pos.x += 1
+				replacedTile = get_tile_id_at(pos); replacedTileOrientation = get_rotation_at_coords(pos)
+				change_tile(pos,6)
+		\"down\":
+			var replacementTest = get_tile_id_at(Vector2i(pos.x, pos.y+1))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				change_tile(pos, replacedTile)
+				set_rotation_at_coords(pos, replacedTileOrientation)
+				pos.y += 1
+				replacedTile = get_tile_id_at(pos); replacedTileOrientation = get_rotation_at_coords(pos)
+				change_tile(pos,6)
+		\"left\":
+			var replacementTest = get_tile_id_at(Vector2i(pos.x-1, pos.y))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				change_tile(pos, replacedTile)
+				set_rotation_at_coords(pos, replacedTileOrientation)
+				pos.x -= 1
+				replacedTile = get_tile_id_at(pos); replacedTileOrientation = get_rotation_at_coords(pos)
+				change_tile(pos,6)
+	set_rotation_at_coords(pos, currDr)
 
 func _input(event: InputEvent) -> void:
+		
 	# Check if the event is a mouse button click
 	if event is InputEventMouseButton and event.pressed:
 		# Get the mouse position in the TileMap's local space
@@ -170,46 +192,106 @@ func _input(event: InputEvent) -> void:
 		# Convert the mouse position to tile coordinates
 		var tile_coords: Vector2i = tilemap.local_to_map(mouse_position)
 		
-		
-		
-		
-		
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			
-			
-			# Check if the tile coordinates are valid (optional)
-			var curr = tilemap.get_cell_source_id(0, tile_coords)
-			if (curr != -1) and (curr <levelTilesPoint or curr in levelAllowedBlocks):
-				destroy_label_at_tile(tile_coords)
-				var pointer = allowedBlocks.find(get_tile_id_at(tile_coords)) # [0,0,0,0]
-				if pointer+1 < len(allowedBlocks): pointer += 1; print(pointer)
-				else: pointer = 0
-				print(pointer)
-				
-				match allowedBlocks[pointer]:
-					0:
-						pass
-					70:
-						pass # Counter block
-					71:
-						spawn_labels_at_tile(tile_coords, true)
-					72:
-						pass # CountDownBlock
-				
-				change_tile(tile_coords, allowedBlocks[pointer])
-				
-				
-				
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			# Print the value stored at the clicked cell (if it exists)
-			if tile_values.has(tile_coords):
-				
-				print(\"Value at cell \", tile_coords, \": \", tile_values[tile_coords])
-				if typeof(tile_values[tile_coords]) == 1: update_label_at_tile(tile_coords, !tile_values[tile_coords])
-			else:
-				print(\"No value stored at cell \", tile_coords)
-		#else:
-			#print(\"Clicked on empty space at coordinates: \", tile_coords)
+		if event.shift_pressed:
+			match event.button_index:
+				MOUSE_BUTTON_WHEEL_UP:
+					if tile_values.has(tile_coords):
+
+						print(\"Value at cell \", tile_coords, \": \", tile_values[tile_coords])
+						if typeof(tile_values[tile_coords]) == 1: await update_label_at_tile(tile_coords, true)
+						if typeof(tile_values[tile_coords]) == 2: await update_label_at_tile(tile_coords, tile_values[tile_coords]+1)
+					else:
+						print(\"No value stored at cell \", tile_coords)
+				MOUSE_BUTTON_WHEEL_DOWN:
+					if tile_values.has(tile_coords):
+						print(\"Value at cell \", tile_coords, \": \", tile_values[tile_coords])
+						if typeof(tile_values[tile_coords]) == 1: await update_label_at_tile(tile_coords, false)
+						if typeof(tile_values[tile_coords]) == 2: await update_label_at_tile(tile_coords, tile_values[tile_coords]-1)
+					else:
+						print(\"No value stored at cell \", tile_coords)
+		else:
+				match event.button_index:
+					MOUSE_BUTTON_LEFT:
+
+						
+						# Check if the tile coordinates are valid (optional)
+						var curr = tilemap.get_cell_source_id(0, tile_coords)
+						if (curr != -1) and (curr <levelTilesPoint or curr in levelAllowedBlocks):
+							await destroy_label_at_tile(tile_coords)
+							var pointer = allowedBlocks.find(get_tile_id_at(tile_coords)) # [0,0,0,0]
+							if pointer+1 < len(allowedBlocks): pointer += 1; print(pointer)
+							else: pointer = 0
+							print(pointer)
+							
+							match allowedBlocks[pointer]:
+								0:
+									pass ##nothing
+								70:
+									await spawn_labels_at_tile(tile_coords, 7) # Counter block. Annoying colour? no change design.
+									
+								71:
+									await spawn_labels_at_tile(tile_coords, true) # Switch block
+								72:
+									await spawn_labels_at_tile(tile_coords, 7) # CountDownBlock
+								73:
+									pass ##idk
+							
+							change_tile(tile_coords, allowedBlocks[pointer])
+							
+							
+							
+					MOUSE_BUTTON_RIGHT:
+						print(\"Value at cell \", tile_coords)
+						if tile_values.has(tile_coords):
+							print(\"Value at cell \", tile_coords, \": \", tile_values[tile_coords])
+							print(typeof(tile_values[tile_coords]))
+						else:
+							print(\"No value stored at cell \", tile_coords)
+					MOUSE_BUTTON_WHEEL_UP:
+						rotate_tile_at_coords(tile_coords,true)
+						print(\"rotating clockwise\")
+					MOUSE_BUTTON_WHEEL_DOWN:
+						rotate_tile_at_coords(tile_coords,false)
+						print(\"rotating anticlockwise\")
+
+func rotate_tile_at_coords(coords: Vector2i, clockwise: bool) -> void:
+	var layer := 0
+	
+	# Get current tile data
+	var source_id := tilemap.get_cell_source_id(layer, coords)
+	var atlas_coords := tilemap.get_cell_atlas_coords(layer, coords)
+	var alternative_tile := tilemap.get_cell_alternative_tile(layer, coords)
+	
+	# Calculate new rotation (cycle through 0-3 alternatives for 0°, 90°, 180°, 270°)
+	var new_alternative: int
+	if clockwise:
+		new_alternative = (alternative_tile + 1) % 4
+	else:
+		new_alternative = (alternative_tile - 1 + 4) % 4  # Ensure no negative values
+	
+	# Update the tile with the new rotation
+	tilemap.set_cell(layer, coords, source_id, atlas_coords, new_alternative) #  Up: 0, Right: 1, Down: 2, Left: 3
+func get_rotation_at_coords(coords: Vector2i) -> int:
+	var layer := 0
+	
+	# Get the alternative tile index (0-3 for rotations)
+	var alternative_tile := tilemap.get_cell_alternative_tile(layer, coords)
+	
+	# Ensure the alternative tile is within the expected range (0-3)
+	return alternative_tile % 4 #  Up: 0, Right: 1, Down: 2, Left: 3
+
+func set_rotation_at_coords(coords: Vector2i, rotation: int) -> void:
+	var layer := 0
+	
+	# Get current tile data
+	var source_id := tilemap.get_cell_source_id(layer, coords)
+	var atlas_coords := tilemap.get_cell_atlas_coords(layer, coords)
+	
+	# Ensure the rotation is within the valid range (0-3)
+	var new_alternative := rotation % 4
+	
+	# Update the tile with the new rotation
+	tilemap.set_cell(layer, coords, source_id, atlas_coords, new_alternative) #  Up: 0, Right: 1, Down: 2, Left: 3
 
 # Called when the node enters the scene tree for the first time.
 func _ready():    # Change the tile at position (2, 3) to tile ID 1
@@ -227,49 +309,71 @@ func _ready():    # Change the tile at position (2, 3) to tile ID 1
 func updateAI(prevDir) -> void:
 	
 	var newPos = Vector2i(0,0)
+	
 	var replacementTest = 0
 	match prevDir:
+		0:
+			newPos = Vector2i(pos.x, pos.y-1); replacementTest = get_tile_id_at(newPos)#; replacedTileOrientation = get_rotation_at_coords(newPos)
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(\"up\")
 		1:
-			newPos = Vector2i(pos.x, pos.y-1); replacementTest = get_tile_id_at(newPos)
+			newPos = Vector2i(pos.x+1, pos.y); replacementTest = get_tile_id_at(newPos)#; replacedTileOrientation = get_rotation_at_coords(newPos)
 			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-				updatePosition(\"up\")
+				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(\"right\")
+
+
 		2:
-			newPos = Vector2i(pos.x+1, pos.y); replacementTest = get_tile_id_at(newPos)
-			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-				updatePosition(\"right\")
-
-
-		3:
 			
-			newPos = Vector2i(pos.x, pos.y+1); replacementTest = get_tile_id_at(newPos)
+			newPos = Vector2i(pos.x, pos.y+1); replacementTest = get_tile_id_at(newPos)#; replacedTileOrientation = get_rotation_at_coords(newPos)
 			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-				updatePosition(\"down\")
-		4:
-			newPos = Vector2i(pos.x-1, pos.y); replacementTest = get_tile_id_at(newPos)
+				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(\"down\")
+		3:
+			newPos = Vector2i(pos.x-1, pos.y); replacementTest = get_tile_id_at(newPos)#; replacedTileOrientation = get_rotation_at_coords(newPos)
 			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-				updatePosition(\"left\")
-				
+				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(\"left\")
+
+func handleSpeicalBlocks(replacementTest, newPos) -> bool:
 	if int(replacementTest) in specialBlocks:
 		match replacementTest:
+			70:
+				if tile_values[newPos] > 0: currDr = (currDr + 2) % 4
+				else: return false
+				await update_label_at_tile(newPos, tile_values[newPos]-1)
 			71:
-				print(\"3\")
-				print(\"Possible failure point (block has got incorrect flag)\")
-				if tile_values.has(newPos):
-					if tile_values[newPos]:
-						currDr += 1
-						if currDr >= 5: currDr = 1
+				print(replacedTileOrientation)
+				if replacedTileOrientation == currDr:
+					print(\"3\")
+					print(\"Possible failure point (block has got incorrect flag)\")
+					if tile_values.has(newPos):
+						if tile_values[newPos]:
+							currDr = (currDr + 1) % 4
+						else:
+							currDr = (currDr - 1) % 4
 					else:
-						currDr -= 1
-						if currDr <= 0: currDr = 4
-				else:
-					print(\"Blcok did not have flag.\")
+						print(\"Blcok did not have flag.\")
+				else: print(\"player was wrong orientation?\") # Ignore nested if statments (I know it's bad practice slide and I'll buy y'all McDonalds)
+			72:
+				if tile_values[newPos] > 0 : currDr = (currDr + 1) % 4
+				else: currDr = (currDr - 1) % 4
+				await update_label_at_tile(newPos, tile_values[newPos]-1)
+			73:
+				print(replacedTileOrientation)
+				currDr = replacedTileOrientation
+
+	return true
 
 func loadLevel(level) -> void:
 	currDr = startDir[level]
+var time: float = 0.0
 
+var action: bool = false
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	pass
+	if action:
+		time += delta
+		if time > 0.4:
+			time = 0
+			updateAI(currDr)
 	#updateAI(currDr)
 	#if Input.is_action_just_pressed(\"up\"):
 		#updatePosition(\"up\")
@@ -282,12 +386,20 @@ func _process(delta):
 		
 
 
-func _on_button_pressed():
-	updateAI(currDr)
+
 
 
 func _on_reset_button_pressed():
 	pass # Run the ready code????
+
+
+func _on_button_button_down():
+
+	action = true
+
+
+func _on_button_button_up():
+	action = false
 "
 
 [node name="level" type="Node2D"]
@@ -296,7 +408,7 @@ script = SubResource("GDScript_6h84l")
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_o1dhr")
 format = 2
-layer_0/tile_data = PackedInt32Array(458766, 90, 0, 458765, 90, 0, 393229, 90, 0, 327693, 91, 0, 262157, 91, 0, 196621, 91, 0, 131085, 91, 0, 65549, 91, 0, 65536, 90, 0, 131072, 90, 0, 196608, 90, 0, 262144, 90, 0, 327680, 90, 0, 393216, 90, 0, 458752, 90, 0, 524288, 90, 0, 524289, 90, 0, 458753, 90, 0, 393217, 90, 0, 327681, 91, 0, 262145, 91, 0, 196609, 91, 0, 131073, 91, 0, 65537, 91, 0, 65538, 0, 0, 131074, 0, 0, 196610, 0, 0, 262146, 0, 0, 327682, 91, 0, 393218, 90, 0, 458754, 90, 0, 524290, 90, 0, 524291, 90, 0, 458755, 90, 0, 393219, 90, 0, 327683, 91, 0, 262147, 0, 0, 196611, 91, 0, 131075, 91, 0, 65539, 91, 0, 65540, 0, 0, 131076, 0, 0, 196612, 91, 0, 262148, 0, 0, 327684, 91, 0, 393220, 90, 0, 458756, 90, 0, 524292, 90, 0, 524293, 90, 0, 458757, 90, 0, 393221, 90, 0, 327685, 91, 0, 262149, 0, 0, 196613, 91, 0, 131077, 0, 0, 65541, 0, 0, 65542, 0, 0, 131078, 0, 0, 196614, 91, 0, 262150, 0, 0, 327686, 91, 0, 393222, 90, 0, 458758, 90, 0, 524294, 90, 0, 524295, 90, 0, 458759, 93, 0, 393223, 0, 0, 327687, 0, 0, 262151, 120, 0, 196615, 91, 0, 131079, 0, 0, 65543, 0, 0, 65544, 0, 0, 131080, 0, 0, 196616, 91, 0, 262152, 0, 0, 327688, 91, 0, 393224, 90, 0, 458760, 90, 0, 524296, 90, 0, 524297, 90, 0, 458761, 90, 0, 393225, 90, 0, 327689, 91, 0, 262153, 0, 0, 196617, 91, 0, 131081, 0, 0, 65545, 0, 0, 65546, 0, 0, 131082, 0, 0, 196618, 91, 0, 262154, 0, 0, 327690, 91, 0, 393226, 90, 0, 458762, 90, 0, 524298, 90, 0, 524299, 90, 0, 458763, 90, 0, 393227, 90, 0, 327691, 91, 0, 262155, 0, 0, 196619, 91, 0, 131083, 91, 0, 65547, 91, 0, 65548, 0, 0, 131084, 0, 0, 196620, 0, 0, 262156, 0, 0, 327692, 91, 0, 393228, 90, 0, 458764, 90, 0, 524300, 90, 0, 65550, 90, 0, 131086, 90, 0, 196622, 90, 0, 262158, 90, 0, 327694, 90, 0, 524301, 90, 0, 524302, 90, 0, 393230, 90, 0, 0, 90, 0, 1, 90, 0, 2, 90, 0, 3, 90, 0, 4, 90, 0, 5, 90, 0, 6, 90, 0, 7, 90, 0, 8, 90, 0, 9, 90, 0, 10, 90, 0, 11, 90, 0, 12, 90, 0, 13, 90, 0, 14, 90, 0)
+layer_0/tile_data = PackedInt32Array(458766, 90, 0, 458765, 0, 0, 393229, 0, 0, 327693, 0, 0, 262157, 0, 0, 196621, 0, 0, 131085, 0, 0, 65549, 0, 0, 65536, 90, 0, 131072, 90, 0, 196608, 90, 0, 262144, 90, 0, 327680, 90, 0, 393216, 90, 0, 458752, 90, 0, 524288, 90, 0, 524289, 90, 0, 458753, 0, 0, 393217, 0, 0, 327681, 0, 0, 262145, 0, 0, 196609, 0, 0, 131073, 0, 0, 65537, 0, 0, 65538, 0, 0, 131074, 0, 0, 196610, 0, 0, 262146, 0, 0, 327682, 0, 0, 393218, 0, 0, 458754, 0, 0, 524290, 90, 0, 524291, 90, 0, 458755, 0, 0, 393219, 0, 0, 327683, 0, 0, 262147, 0, 0, 196611, 0, 0, 131075, 0, 0, 65539, 0, 0, 65540, 0, 0, 131076, 0, 0, 196612, 0, 0, 262148, 0, 0, 327684, 0, 0, 393220, 0, 0, 458756, 0, 0, 524292, 90, 0, 524293, 90, 0, 458757, 0, 0, 327685, 0, 0, 262149, 0, 0, 196613, 0, 0, 131077, 0, 0, 65541, 0, 0, 65542, 0, 0, 131078, 0, 0, 196614, 0, 0, 262150, 0, 0, 327686, 0, 0, 393222, 0, 0, 458758, 0, 0, 524294, 90, 0, 524295, 90, 0, 458759, 0, 0, 393223, 0, 0, 327687, 0, 0, 262151, 0, 0, 196615, 0, 0, 131079, 0, 0, 65543, 0, 0, 65544, 0, 0, 131080, 0, 0, 196616, 0, 0, 262152, 0, 0, 327688, 0, 0, 393224, 0, 0, 458760, 0, 0, 524296, 90, 0, 524297, 90, 0, 458761, 0, 0, 393225, 0, 0, 327689, 0, 0, 262153, 0, 0, 196617, 0, 0, 131081, 0, 0, 65545, 0, 0, 65546, 0, 0, 131082, 0, 0, 196618, 0, 0, 262154, 0, 0, 327690, 0, 0, 393226, 0, 0, 458762, 0, 0, 524298, 90, 0, 524299, 90, 0, 458763, 0, 0, 393227, 0, 0, 327691, 0, 0, 262155, 0, 0, 196619, 0, 0, 131083, 0, 0, 65547, 0, 0, 65548, 0, 0, 131084, 0, 0, 196620, 0, 0, 262156, 0, 0, 327692, 0, 0, 393228, 0, 0, 458764, 0, 0, 524300, 90, 0, 65550, 90, 0, 131086, 90, 0, 196622, 90, 0, 262158, 90, 0, 327694, 90, 0, 524301, 90, 0, 524302, 90, 0, 393230, 90, 0, 0, 90, 0, 1, 90, 0, 2, 90, 0, 3, 90, 0, 4, 90, 0, 5, 90, 0, 6, 90, 0, 7, 90, 0, 8, 90, 0, 9, 90, 0, 10, 90, 0, 11, 90, 0, 12, 90, 0, 13, 90, 0, 14, 90, 0, 393221, 0, 0)
 script = ExtResource("2_him4c")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="TileMap"]
@@ -369,5 +481,6 @@ offset_top = 82.0
 offset_right = 43.0
 offset_bottom = 90.0
 
-[connection signal="pressed" from="TileMap/Button" to="." method="_on_button_pressed"]
+[connection signal="button_down" from="TileMap/Button" to="." method="_on_button_button_down"]
+[connection signal="button_up" from="TileMap/Button" to="." method="_on_button_button_up"]
 [connection signal="pressed" from="TileMap/resetButton" to="." method="_on_reset_button_pressed"]

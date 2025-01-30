@@ -16,12 +16,11 @@
 resource_name = "none"
 texture = ExtResource("4_w284f")
 texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 4
 0:0/0 = 0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8eb36"]
-texture = ExtResource("2_kjkyy")
-texture_region_size = Vector2i(10, 10)
-0:0/0 = 0
+0:0/1 = 1
+0:0/2 = 2
+0:0/3 = 3
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_52bnp"]
 texture = ExtResource("9_s0rbk")
@@ -31,20 +30,71 @@ texture_region_size = Vector2i(10, 10)
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8djyi"]
 texture = ExtResource("6_pv25p")
 texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 5
 0:0/0 = 0
+0:0/2 = 2
+0:0/2/flip_v = true
+0:0/3 = 3
+0:0/3/transpose = true
+0:0/1 = 1
+0:0/1/flip_h = true
+0:0/1/transpose = true
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mqa4a"]
 texture = ExtResource("9_qb6cg")
 texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 5
 0:0/0 = 0
+0:0/1 = 1
+0:0/1/flip_h = true
+0:0/1/transpose = true
+0:0/2 = 2
+0:0/2/flip_v = true
+0:0/3 = 3
+0:0/3/transpose = true
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_htx8g"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1xhdr"]
 texture = ExtResource("10_dpwsg")
 texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 4
 0:0/0 = 0
+0:0/1 = 1
+0:0/1/flip_h = true
+0:0/1/transpose = true
+0:0/2 = 2
+0:0/2/flip_v = true
+0:0/3 = 3
+0:0/3/transpose = true
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_a7blb"]
 texture = ExtResource("8_c1h2y")
+texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 4
+0:0/0 = 0
+0:0/1 = 1
+0:0/1/flip_h = true
+0:0/1/transpose = true
+0:0/2 = 2
+0:0/2/flip_v = true
+0:0/3 = 3
+0:0/3/transpose = true
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8eb36"]
+resource_name = "RedirectBlock"
+texture = ExtResource("2_kjkyy")
+texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 4
+0:0/0 = 0
+0:0/1 = 1
+0:0/1/flip_h = true
+0:0/1/transpose = true
+0:0/2 = 2
+0:0/2/flip_v = true
+0:0/3 = 3
+0:0/3/transpose = true
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y5ge0"]
+texture = ExtResource("1_3ppiu")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
@@ -52,12 +102,9 @@ texture_region_size = Vector2i(10, 10)
 resource_name = "noentry"
 texture = ExtResource("3_6ia3h")
 texture_region_size = Vector2i(10, 10)
+0:0/next_alternative_id = 2
 0:0/0 = 0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y5ge0"]
-texture = ExtResource("1_3ppiu")
-texture_region_size = Vector2i(10, 10)
-0:0/0 = 0
+0:0/1 = 1
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_t3wae"]
 texture = ExtResource("4_uacgt")
@@ -75,10 +122,10 @@ sources/6 = SubResource("TileSetAtlasSource_8djyi")
 sources/0 = SubResource("TileSetAtlasSource_mxlvt")
 sources/120 = SubResource("TileSetAtlasSource_52bnp")
 sources/70 = SubResource("TileSetAtlasSource_mqa4a")
-sources/1000 = SubResource("TileSetAtlasSource_8eb36")
-sources/71 = SubResource("TileSetAtlasSource_htx8g")
 sources/90 = SubResource("TileSetAtlasSource_r2na5")
-sources/91 = SubResource("TileSetAtlasSource_y5ge0")
 sources/92 = SubResource("TileSetAtlasSource_t3wae")
 sources/93 = SubResource("TileSetAtlasSource_rhly3")
 sources/72 = SubResource("TileSetAtlasSource_a7blb")
+sources/73 = SubResource("TileSetAtlasSource_8eb36")
+sources/74 = SubResource("TileSetAtlasSource_y5ge0")
+sources/71 = SubResource("TileSetAtlasSource_1xhdr")
