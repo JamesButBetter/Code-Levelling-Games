@@ -15,16 +15,17 @@ script/source = "extends Node2D
 @export var currLevel = 0
 
 var startPosition = Vector2i(7, 7)
-var replacedTile = 5
+var replacedTile = 93
 var pos = Vector2i(7, 7)
 
 var startDir = [1, ]
-var currDr = 0
+var currDr = 1
 
 var tile_values: Dictionary = {}
 
 var addedTiles = 7
 var levelAllowedBlocks = [70] # Maybe make 90 jump for block or move allowed special to 90
+var specialBlocks = [1, 2, 7, 70]
 
 var levelTilesPoint = 70
 
@@ -191,20 +192,42 @@ func _ready():    # Change the tile at position (2, 3) to tile ID 1
 	#change_tile(Vector2i(0, 0), 6)
 	#spawn_labels_for_tile_id(6)
 	# Clear the tile at position (4, 5)
-	# change_tile(Vector2i(4, 5), -1)
+	# change_tile(Vector2i(4, 5), -1) # ignore and fix this later!!!!!
 
 func updateAI(prevDir) -> void:
-	if prevDir == 1:
-		var replacementTest = get_tile_id_at(Vector2i(pos.x, pos.y-1))
-		if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
-			updatePosition(\"up\")
+	var replacementTest = 0
+	match prevDir:
+		1:
+			replacementTest = get_tile_id_at(Vector2i(pos.x, pos.y-1))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				updatePosition(\"up\")
+
+		2:
+			replacementTest = get_tile_id_at(Vector2i(pos.x+1, pos.y))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				updatePosition(\"right\")
+
+
+		3:
+			replacementTest = get_tile_id_at(Vector2i(pos.x, pos.y+1))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				updatePosition(\"down\")
+		4:
+			replacementTest = get_tile_id_at(Vector2i(pos.x-1, pos.y))
+			if  replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks:
+				updatePosition(\"left\")
+				
+	if replacementTest in specialBlocks:
+		print(\"special block logged\")
+		pass
 
 func loadLevel(level) -> void:
 	currDr = startDir[level]
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	updateAI(currDr)
+	pass
+	#updateAI(currDr)
 	#if Input.is_action_just_pressed(\"up\"):
 		#updatePosition(\"up\")
 	#if Input.is_action_just_pressed(\"left\"):
@@ -214,6 +237,14 @@ func _process(delta):
 	#if Input.is_action_just_pressed(\"down\"):
 		#updatePosition(\"down\")
 		
+
+
+func _on_button_pressed():
+	updateAI(currDr)
+
+
+func _on_reset_button_pressed():
+	pass # Run the ready code????
 "
 
 [node name="level" type="Node2D"]
@@ -222,7 +253,7 @@ script = SubResource("GDScript_6h84l")
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_o1dhr")
 format = 2
-layer_0/tile_data = PackedInt32Array(458766, 71, 0, 458765, 71, 0, 393229, 71, 0, 327693, 72, 0, 262157, 72, 0, 196621, 72, 0, 131085, 72, 0, 65549, 72, 0, 65536, 71, 0, 131072, 71, 0, 196608, 71, 0, 262144, 71, 0, 327680, 71, 0, 393216, 71, 0, 458752, 71, 0, 524288, 71, 0, 524289, 71, 0, 458753, 71, 0, 393217, 71, 0, 327681, 72, 0, 262145, 72, 0, 196609, 72, 0, 131073, 72, 0, 65537, 72, 0, 65538, 3, 0, 131074, 3, 0, 196610, 3, 0, 262146, 3, 0, 327682, 72, 0, 393218, 71, 0, 458754, 71, 0, 524290, 71, 0, 524291, 71, 0, 458755, 71, 0, 393219, 71, 0, 327683, 72, 0, 262147, 3, 0, 196611, 72, 0, 131075, 72, 0, 65539, 72, 0, 65540, 3, 0, 131076, 3, 0, 196612, 72, 0, 262148, 3, 0, 327684, 72, 0, 393220, 71, 0, 458756, 71, 0, 524292, 71, 0, 524293, 71, 0, 458757, 71, 0, 393221, 71, 0, 327685, 72, 0, 262149, 3, 0, 196613, 72, 0, 131077, 3, 0, 65541, 3, 0, 65542, 3, 0, 131078, 3, 0, 196614, 72, 0, 262150, 3, 0, 327686, 72, 0, 393222, 71, 0, 458758, 71, 0, 524294, 71, 0, 524295, 71, 0, 458759, 5, 0, 393223, 3, 0, 327687, 3, 0, 262151, 70, 0, 196615, 72, 0, 131079, 3, 0, 65543, 3, 0, 65544, 3, 0, 131080, 3, 0, 196616, 72, 0, 262152, 3, 0, 327688, 72, 0, 393224, 71, 0, 458760, 71, 0, 524296, 71, 0, 524297, 71, 0, 458761, 71, 0, 393225, 71, 0, 327689, 72, 0, 262153, 3, 0, 196617, 72, 0, 131081, 3, 0, 65545, 3, 0, 65546, 3, 0, 131082, 3, 0, 196618, 72, 0, 262154, 3, 0, 327690, 72, 0, 393226, 71, 0, 458762, 71, 0, 524298, 71, 0, 524299, 71, 0, 458763, 71, 0, 393227, 71, 0, 327691, 72, 0, 262155, 3, 0, 196619, 72, 0, 131083, 72, 0, 65547, 72, 0, 65548, 3, 0, 131084, 3, 0, 196620, 3, 0, 262156, 3, 0, 327692, 72, 0, 393228, 71, 0, 458764, 71, 0, 524300, 71, 0, 65550, 71, 0, 131086, 71, 0, 196622, 71, 0, 262158, 71, 0, 327694, 71, 0, 524301, 71, 0, 524302, 71, 0, 393230, 71, 0, 0, 71, 0, 1, 71, 0, 2, 71, 0, 3, 71, 0, 4, 71, 0, 5, 71, 0, 6, 71, 0, 7, 71, 0, 8, 71, 0, 9, 71, 0, 10, 71, 0, 11, 71, 0, 12, 71, 0, 13, 71, 0, 14, 71, 0)
+layer_0/tile_data = PackedInt32Array(458766, 90, 0, 458765, 90, 0, 393229, 90, 0, 327693, 91, 0, 262157, 91, 0, 196621, 91, 0, 131085, 91, 0, 65549, 91, 0, 65536, 90, 0, 131072, 90, 0, 196608, 90, 0, 262144, 90, 0, 327680, 90, 0, 393216, 90, 0, 458752, 90, 0, 524288, 90, 0, 524289, 90, 0, 458753, 90, 0, 393217, 90, 0, 327681, 91, 0, 262145, 91, 0, 196609, 91, 0, 131073, 91, 0, 65537, 91, 0, 65538, 0, 0, 131074, 0, 0, 196610, 0, 0, 262146, 0, 0, 327682, 91, 0, 393218, 90, 0, 458754, 90, 0, 524290, 90, 0, 524291, 90, 0, 458755, 90, 0, 393219, 90, 0, 327683, 91, 0, 262147, 0, 0, 196611, 91, 0, 131075, 91, 0, 65539, 91, 0, 65540, 0, 0, 131076, 0, 0, 196612, 91, 0, 262148, 0, 0, 327684, 91, 0, 393220, 90, 0, 458756, 90, 0, 524292, 90, 0, 524293, 90, 0, 458757, 90, 0, 393221, 90, 0, 327685, 91, 0, 262149, 0, 0, 196613, 91, 0, 131077, 0, 0, 65541, 0, 0, 65542, 0, 0, 131078, 0, 0, 196614, 91, 0, 262150, 0, 0, 327686, 91, 0, 393222, 90, 0, 458758, 90, 0, 524294, 90, 0, 524295, 90, 0, 458759, 93, 0, 393223, 0, 0, 327687, 0, 0, 262151, 70, 0, 196615, 91, 0, 131079, 0, 0, 65543, 0, 0, 65544, 0, 0, 131080, 0, 0, 196616, 91, 0, 262152, 0, 0, 327688, 91, 0, 393224, 90, 0, 458760, 90, 0, 524296, 90, 0, 524297, 90, 0, 458761, 90, 0, 393225, 90, 0, 327689, 91, 0, 262153, 0, 0, 196617, 91, 0, 131081, 0, 0, 65545, 0, 0, 65546, 0, 0, 131082, 0, 0, 196618, 91, 0, 262154, 0, 0, 327690, 91, 0, 393226, 90, 0, 458762, 90, 0, 524298, 90, 0, 524299, 90, 0, 458763, 90, 0, 393227, 90, 0, 327691, 91, 0, 262155, 0, 0, 196619, 91, 0, 131083, 91, 0, 65547, 91, 0, 65548, 0, 0, 131084, 0, 0, 196620, 0, 0, 262156, 0, 0, 327692, 91, 0, 393228, 90, 0, 458764, 90, 0, 524300, 90, 0, 65550, 90, 0, 131086, 90, 0, 196622, 90, 0, 262158, 90, 0, 327694, 90, 0, 524301, 90, 0, 524302, 90, 0, 393230, 90, 0, 0, 90, 0, 1, 90, 0, 2, 90, 0, 3, 90, 0, 4, 90, 0, 5, 90, 0, 6, 90, 0, 7, 90, 0, 8, 90, 0, 9, 90, 0, 10, 90, 0, 11, 90, 0, 12, 90, 0, 13, 90, 0, 14, 90, 0)
 script = ExtResource("2_him4c")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="TileMap"]
@@ -232,6 +263,18 @@ offset_right = 110.0
 offset_bottom = 30.0
 scroll_active = false
 script = ExtResource("3_rp448")
+
+[node name="Button" type="Button" parent="TileMap"]
+offset_left = 138.0
+offset_top = 76.0
+offset_right = 146.0
+offset_bottom = 84.0
+
+[node name="resetButton" type="Button" parent="TileMap"]
+offset_left = 6.0
+offset_top = 5.0
+offset_right = 14.0
+offset_bottom = 13.0
 
 [node name="optionsPanel" type="Panel" parent="."]
 visible = false
@@ -282,3 +325,6 @@ offset_left = 35.0
 offset_top = 82.0
 offset_right = 43.0
 offset_bottom = 90.0
+
+[connection signal="pressed" from="TileMap/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="TileMap/resetButton" to="." method="_on_reset_button_pressed"]
