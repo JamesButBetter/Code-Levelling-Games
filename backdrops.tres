@@ -12,8 +12,8 @@
 [ext_resource type="Texture2D" uid="uid://bqnsj5y0ly07" path="res://highlighted.png" id="9_s0rbk"]
 [ext_resource type="Texture2D" uid="uid://b2alq1ppydvpf" path="res://trueFalseBlock.png" id="10_dpwsg"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y5ge0"]
-texture = ExtResource("1_3ppiu")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mqa4a"]
+texture = ExtResource("9_qb6cg")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
@@ -22,9 +22,8 @@ texture = ExtResource("2_kjkyy")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_r2na5"]
-resource_name = "noentry"
-texture = ExtResource("3_6ia3h")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_htx8g"]
+texture = ExtResource("10_dpwsg")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
@@ -59,26 +58,27 @@ texture = ExtResource("9_s0rbk")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mqa4a"]
-texture = ExtResource("9_qb6cg")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_r2na5"]
+resource_name = "noentry"
+texture = ExtResource("3_6ia3h")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_htx8g"]
-texture = ExtResource("10_dpwsg")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y5ge0"]
+texture = ExtResource("1_3ppiu")
 texture_region_size = Vector2i(10, 10)
 0:0/0 = 0
 
 [resource]
 tile_size = Vector2i(10, 10)
-sources/2 = SubResource("TileSetAtlasSource_r2na5")
 sources/3 = SubResource("TileSetAtlasSource_mxlvt")
-sources/1 = SubResource("TileSetAtlasSource_y5ge0")
 sources/4 = SubResource("TileSetAtlasSource_t3wae")
 sources/5 = SubResource("TileSetAtlasSource_rhly3")
 sources/6 = SubResource("TileSetAtlasSource_8djyi")
 sources/7 = SubResource("TileSetAtlasSource_a7blb")
-sources/8 = SubResource("TileSetAtlasSource_mqa4a")
-sources/9 = SubResource("TileSetAtlasSource_htx8g")
 sources/10 = SubResource("TileSetAtlasSource_8eb36")
 sources/70 = SubResource("TileSetAtlasSource_52bnp")
+sources/71 = SubResource("TileSetAtlasSource_r2na5")
+sources/2 = SubResource("TileSetAtlasSource_htx8g")
+sources/72 = SubResource("TileSetAtlasSource_y5ge0")
+sources/1 = SubResource("TileSetAtlasSource_mqa4a")
