@@ -5,19 +5,7 @@ extends RichTextLabel
 @export var min_font_size: int = 1    # Minimum font size (can be very small)
 
 func _ready():
-	# Enable BBCode for text formatting
-	bbcode_enabled = true
-
-	# Set the text with BBCode for centering
-	text = "[center]This level introduces the switch block.
-	The switch block will move the bot to the green side if the statement is positive, and the red side if the statement is negative.
-	Place a switch block on the highlighed square, and then press play to watch the bot.[/center]"
-
-	# Enable autowrap to ensure text stays within bounds
-	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	# Call the function to scale the text to fit
-	scale_text_to_fit()
+	pass
 
 func scale_text_to_fit():
 	# Start with the maximum font size
@@ -44,5 +32,4 @@ func scale_text_to_fit():
 
 # Optional: Call this function if the label's size changes
 func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		scale_text_to_fit()
+	pass

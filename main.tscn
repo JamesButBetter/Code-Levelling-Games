@@ -145,34 +145,23 @@ func checkCanMoveToBlock(replacementTest) -> bool:
 	return (replacementTest < levelTilesPoint or replacementTest in levelAllowedBlocks)
 
 func updatePosition(dir) -> void:
-	
+	change_tile(pos, replacedTile)
+	set_rotation_at_coords(pos, tempReplacedTileOrientation)
+	print(\"Set totation at cords\", pos, tempReplacedTileOrientation)
 	match dir:
+		
 		0: # Up
-			change_tile(pos, replacedTile)
-			set_rotation_at_coords(pos, tempReplacedTileOrientation)
-			print(\"Set totation at cords\", pos, tempReplacedTileOrientation)
 			pos.y -= 1
-			replacedTile = get_tile_id_at(pos)
-			tempReplacedTileOrientation = get_rotation_at_coords(pos)
-			change_tile(pos,6)
 		1: # Right
-			change_tile(pos, replacedTile)
-			set_rotation_at_coords(pos, replacedTileOrientation)
 			pos.x += 1
-			replacedTile = get_tile_id_at(pos)#; replacedTileOrientation = get_rotation_at_coords(pos)
-			change_tile(pos,6)
 		2: # Down
-			change_tile(pos, replacedTile)
-			set_rotation_at_coords(pos, replacedTileOrientation)
 			pos.y += 1
-			replacedTile = get_tile_id_at(pos)#; replacedTileOrientation = get_rotation_at_coords(pos)
-			change_tile(pos,6)
 		3: # Left
-			change_tile(pos, replacedTile)
-			set_rotation_at_coords(pos, replacedTileOrientation)
 			pos.x -= 1
-			replacedTile = get_tile_id_at(pos)#; replacedTileOrientation = get_rotation_at_coords(pos)
-			change_tile(pos,6)
+			
+	replacedTile = get_tile_id_at(pos)
+	tempReplacedTileOrientation = get_rotation_at_coords(pos)
+	change_tile(pos,6)
 	set_rotation_at_coords(pos, currDr)
 
 func _input(event: InputEvent) -> void:
@@ -306,58 +295,65 @@ func updateAI() -> void:
 	var replacementTest = 0
 	match currDr:
 		0:
-			newPos = Vector2i(pos.x, pos.y-1); replacementTest = get_tile_id_at(newPos); replacedTileOrientation = get_rotation_at_coords(newPos)
-			if  checkCanMoveToBlock(replacementTest):
-				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(currDr)
+			newPos = Vector2i(pos.x, pos.y-1)
 		1:
-			newPos = Vector2i(pos.x+1, pos.y); replacementTest = get_tile_id_at(newPos); replacedTileOrientation = get_rotation_at_coords(newPos)
-			if  checkCanMoveToBlock(replacementTest):
-				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(currDr)
-
-
+			newPos = Vector2i(pos.x+1, pos.y)
 		2:
-			
-			newPos = Vector2i(pos.x, pos.y+1); replacementTest = get_tile_id_at(newPos); replacedTileOrientation = get_rotation_at_coords(newPos)
-			if  checkCanMoveToBlock(replacementTest):
-				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(currDr)
+			newPos = Vector2i(pos.x, pos.y+1)
 		3:
-			newPos = Vector2i(pos.x-1, pos.y); replacementTest = get_tile_id_at(newPos); replacedTileOrientation = get_rotation_at_coords(newPos)
-			if  checkCanMoveToBlock(replacementTest):
-				if await handleSpeicalBlocks(replacementTest, newPos): updatePosition(currDr)
+			newPos = Vector2i(pos.x-1, pos.y)
+		
+	
+	replacementTest = get_tile_id_at(newPos); replacedTileOrientation = get_rotation_at_coords(newPos)
+		
+	var stopBlockDirection: int = 7
+	
+	if checkCanMoveToBlock(replacementTest):
+		stopBlockDirection = await handleStopBlocks(replacementTest, newPos)
+		if stopBlockDirection != 7: updatePosition(currDr)
+		currDr = await handleSpeicalBlocks(replacementTest, newPos)
+		
+		if stopBlockDirection < 4: currDr = stopBlockDirection
+		
+func handleStopBlocks(replacementTest, newPos) -> int:
+	var newDr: int = 7
+	match replacementTest:
+		70:
+			print(\"handling for block id:70\")
+			if tile_values[newPos] > 0: newDr = (currDr + 2) % 4
+			else: return 7
+			await update_label_at_tile(newPos, tile_values[newPos]-1)
+		_:
+			return 9
+	return newDr
 
-func handleSpeicalBlocks(replacementTest, newPos) -> bool:
+func handleSpeicalBlocks(replacementTest, newPos) -> int:
+	var newDr = currDr
 	if int(replacementTest) in specialBlocks:
 		match replacementTest:
-			70:
-				if tile_values[newPos] > 0: currDr = (currDr + 2) % 4
-				else: return false
-				await update_label_at_tile(newPos, tile_values[newPos]-1)
 			71:
-				print(replacedTileOrientation)
-				if replacedTileOrientation == currDr:
+				#print(replacedTileOrientation)
+				if replacedTileOrientation == newDr:
 					print(\"3\")
 					print(\"Possible failure point (block has got incorrect flag)\")
 					if tile_values.has(newPos):
-						if tile_values[newPos]:
-							currDr = (currDr + 1) % 4
-						else:
-							currDr = (currDr - 1) % 4
-					else:
-						print(\"Blcok did not have flag.\")
+						if tile_values[newPos]: newDr = (newDr + 1) % 4
+						else: newDr = (newDr + 3) % 4
+					else: print(\"Blcok did not have flag.\")
 				else: print(\"player was wrong orientation?\") # Ignore nested if statments (I know it's bad practice slide and I'll buy y'all McDonalds)
 			72:
 				#print(\"++startlisten++\")
-				#print(currDr)
-				if tile_values[newPos] > 0 : currDr = (currDr + 1) % 4;await update_label_at_tile(newPos, tile_values[newPos]-1) # Update only if one, becuase one resolves to zero.
-				else: currDr = (currDr + 3) % 4
+				#print(newDr)
+				if tile_values[newPos] > 0 : newDr = (newDr + 1) % 4;await update_label_at_tile(newPos, tile_values[newPos]-1) # Update only if one, becuase one resolves to zero.
+				else: newDr = (newDr + 3) % 4
 				if tile_values[newPos] > 0: pass # Maybe use non 0-index values here.
-				print(currDr)
-				return true
+				print(newDr)
+				#return newDr
 			73:
-				currDr = replacedTileOrientation # kms
-				print(replacedTileOrientation, currDr)
+				newDr = replacedTileOrientation # kms
+				print(replacedTileOrientation, newDr)
 
-	return true
+	return newDr
 
 func loadLevel(level) -> void:
 	pass
@@ -412,6 +408,10 @@ func _on_button_button_up():
 # TODO
 # ALLOW USER TO STEP OVER BLOCKS INSDE OF WHEN(TOUCH)
 # Preview short simulation (softline?)
+
+
+func _on_button_2_pressed():
+	OS.shell_open(\"https://jamesbutbetter.github.io/Code-Levelling-Games/tutorial.html\")
 "
 
 [node name="level" type="Node2D"]
@@ -424,24 +424,65 @@ layer_0/tile_data = PackedInt32Array(458766, 90, 0, 458765, 0, 0, 393229, 0, 0, 
 script = ExtResource("2_him4c")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="TileMap"]
-offset_left = 40.0
-offset_top = 10.0
-offset_right = 110.0
-offset_bottom = 30.0
+offset_left = 1.0
+offset_right = 207.0
+offset_bottom = 23.0
+scale = Vector2(0.434915, 0.434915)
+text = "SANDBOX MODE ENABLED"
+fit_content = true
 scroll_active = false
+autowrap_mode = 0
 script = ExtResource("3_rp448")
 
 [node name="Button" type="Button" parent="TileMap"]
-offset_left = 138.0
-offset_top = 76.0
-offset_right = 146.0
-offset_bottom = 84.0
+offset_left = 140.0
+offset_top = 82.0
+offset_right = 179.0
+offset_bottom = 113.0
+scale = Vector2(0.230171, 0.230171)
+text = "Run"
 
 [node name="resetButton" type="Button" parent="TileMap"]
-offset_left = 6.0
+offset_left = 125.0
+offset_top = 81.0
+offset_right = 176.0
+offset_bottom = 112.0
+scale = Vector2(0.257292, 0.257292)
+text = "Reset"
+
+[node name="Button2" type="Button" parent="TileMap"]
+offset_left = 1.0
+offset_top = 81.0
+offset_right = 43.0
+offset_bottom = 112.0
+scale = Vector2(0.258182, 0.258182)
+text = "Wiki"
+
+[node name="Button3" type="Button" parent="TileMap"]
+offset_left = 122.0
 offset_top = 5.0
-offset_right = 14.0
-offset_bottom = 13.0
+offset_right = 218.0
+offset_bottom = 36.0
+scale = Vector2(0.118492, 0.118492)
+text = "Main menu"
+
+[node name="Button4" type="Button" parent="TileMap"]
+offset_left = 136.0
+offset_top = 5.0
+offset_right = 192.0
+offset_bottom = 36.0
+scale = Vector2(0.117701, 0.117701)
+text = "Levels"
+
+[node name="RichTextLabel2" type="RichTextLabel" parent="TileMap"]
+offset_left = 121.0
+offset_right = 232.0
+offset_bottom = 23.0
+scale = Vector2(0.203655, 0.202319)
+text = "(Coming soon)"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
 [node name="optionsPanel" type="Panel" parent="."]
 visible = false
@@ -496,3 +537,4 @@ offset_bottom = 90.0
 [connection signal="button_down" from="TileMap/Button" to="." method="_on_button_button_down"]
 [connection signal="button_up" from="TileMap/Button" to="." method="_on_button_button_up"]
 [connection signal="pressed" from="TileMap/resetButton" to="." method="_on_reset_button_pressed"]
+[connection signal="pressed" from="TileMap/Button2" to="." method="_on_button_2_pressed"]
