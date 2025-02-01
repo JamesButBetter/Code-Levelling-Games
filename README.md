@@ -1,5 +1,5 @@
 # @JamesButBetter hack club submission
 ## Made in two days using Godot
 - Sandbox mode complete
-- Levels (Coming soon)
-- Interactive loading screen.
+- First Godot project
+- Took two days w/education bc I procrastinated until the last moment (:
